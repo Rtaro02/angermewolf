@@ -1,0 +1,4 @@
+cron:
+- description: "call 5ch"
+  url: /
+  schedule: every 1 hours

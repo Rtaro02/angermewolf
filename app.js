@@ -1,12 +1,19 @@
 //モジュールのインポート
 const https = require('https');
 const fs = require('fs');
-const iconv = require('iconv-lite')
 const request = require('request');
 var Twitter = require('twitter');
+var iconv = require('iconv-lite');
 const express = require('express')
 const credential = require('./credential.js');
 const app = express();
+const Firestore = require('@google-cloud/firestore');
+const { rejects } = require('assert');
+
+const db = new Firestore({
+  projectId: credential.projectId,
+  keyFilename: credential.keyFilename,
+});
 
 // ダウンロード先のURL
 const url = 'https://matsuri.5ch.net/morningcoffee/subback.html';
@@ -18,7 +25,8 @@ const falseList = [
   /一人で行く/,
   /佐々木希/,
   /応援スレ/,
-  /チンクエッティ/
+  /チンクエッティ/,
+  /太田/
 ]
 
 const trueList = [
@@ -46,6 +54,32 @@ const trueList = [
   /[あアｱ][んンﾝ][じジｼﾞ][ゅュｭ][るルﾙ]*[むムﾑ]*/
 ]
 
+const client = new Twitter({
+  consumer_key: credential.keys.consumer_key,
+  consumer_secret: credential.keys.consumer_secret,
+  access_token_key: credential.keys.access_token_key,
+  access_token_secret: credential.keys.access_token_secret
+});
+
+function tweet(x) {
+  const docRef = db.collection('5ch-thread');
+  docRef.doc(x.id).get().then(doc => {
+    if(!doc.exists) {
+      docRef.doc(x.id).set({"url": x.url})
+      var tweet_text = x.title + '\n' + x.url;
+      client.post('statuses/update', {status: tweet_text}, function(error, tweet, response) {
+        if (!error) {
+          console.log(new Date() + ' tweet success: ' + tweet_text)
+        } else {
+          console.log(error);
+        }
+      });
+    } else {
+      console.log('Already tweeted');
+    }
+  })
+}
+
 function checkAngerme (x) {
   // Exception Area
   for(var fl of falseList) {
@@ -58,64 +92,39 @@ function checkAngerme (x) {
   return false;
 }
 
-function tweet(url, title, callback) {
-  var client = new Twitter({
-      consumer_key: credential.keys.consumer_key,
-      consumer_secret: credential.keys.consumer_secret,
-      access_token_key: credential.keys.access_token_key,
-      access_token_secret: credential.keys.access_token_secret
-  });
-  var tweet_text = title + '\n' + url;
-  client.post('statuses/update', {status: tweet_text}, function(error, tweet, response) {
-    if (!error) {
-      console.log(new Date() + ' tweet success: ' + tweet_text)
-      callback()
-    } else {
-      console.log(error);
-      callback(error)
-    }
-  });
-}
-
-function fetchAndTweet(data, callback) {
-  const buf    = new Buffer.from(data, 'binary');  
-  const retStr = iconv.decode(buf, "Shift_JIS");
-  var list = retStr.replace(/\n/g, '').split('<a');
+function parse(x) {
+  var l = [];
+  var list = x.replace(/\n/g, '').split('<a');
   for(var item of list){
     // Skip non thread title.
     if(/^.*href="\d+.*$/.test(item)) {
-      var url = 'https://matsuri.5ch.net/test/read.cgi/morningcoffee/' + item.replace(/^.*href="([^"]+)".*$/, '$1');
-      var title = item.replace(/^.*>([^>]+)<\/a>.*$/, '$1').replace(/&quot;/g, '').replace(/^\d+: /, '').replace(/\(\d+\)$/, '');
-      if(checkAngerme(title)) {
-        asyncRun(url, title, callback);
-        break;
+      var unit = {};
+      unit.id = item.replace(/^.*href="([^\/]+)\/.*$/, '$1');
+      unit.url = 'https://matsuri.5ch.net/test/read.cgi/morningcoffee/' + unit.id;
+      unit.title = item.replace(/^.*>([^>]+)<\/a>.*$/, '$1').replace(/&quot;/g, '').replace(/^\d+: /, '').replace(/\(\d+\)$/, '');
+      if(checkAngerme(unit.title)) {
+        l.push(unit);
       }
     }
-    function asyncRun(url, title, callback) {
-      tweet(url, title, callback)
-    }
   };
+  return l;
 }
 
 function run(url, callback) {
-  const savepath = './test.html';
-  var outfile = fs.createWriteStream(savepath);
-  https.get(url, function(res){
-    res.pipe(outfile);
-    res.on('end', function () {
-      outfile.close();
-      fs.readFile(savepath, function(err, data){
-        if(err) {
-          console.log(err);
-        }
-        fetchAndTweet(data, callback)
-      });
-    });
-  });
+  request(url).on('error', (err) => { reject(err) })
+              .pipe(iconv.decodeStream("windows-31j"))
+              .collect((err, body) => {
+                if(err) return callback(err);
+                var list = parse(body);
+                for(l of list){
+                  tweet(l);
+                }
+                return callback();
+              });
 }
 
-app.get('/', (req, res) => {
-  run(url, function(err){
+app.get('/', async (req, res) => {
+  await run(url, function(err){
     if(err) {
       res.status(400).send('Failed').end();
     } else {

@@ -123,21 +123,8 @@ function run(url, callback) {
               });
 }
 
-app.get('/', async (req, res) => {
-  await run(url, function(err){
-    if(err) {
-      res.status(400).send('Failed').end();
-    } else {
-      res.status(200).send('Success').end();
-    }
-  })
-});
+run(url, function(){})
 
-// Start the server
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-  console.log('Press Ctrl+C to quit.');
-});
-
-module.exports = app;
+// exports.execute = (event, context) => {
+//   run(url, function(){})
+// }

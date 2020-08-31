@@ -128,4 +128,6 @@ function run(url, callback) {
               });
 }
 
-run(url, function(){})
+exports.execute = (event, context) => {
+  run(url, function(){})
+}

@@ -19,14 +19,20 @@ const db = new Firestore({
 const url = 'https://matsuri.5ch.net/morningcoffee/subback.html';
 
 const falseList = [
-  /[Pp][Aa][Rr][Tt]\d*/,
   /鈴木/,
   /中日ドラゴンズ/,
   /一人で行く/,
   /佐々木希/,
   /応援スレ/,
+  /【アンジュルム】佐々木莉佳子ちゃんが気になる/,
+  /【アンジュルム】タケちゃんこと竹内朱莉ちゃん/,
   /チンクエッティ/,
-  /伊勢谷/
+  /伊勢谷/,
+  /竹内力/,
+  /竹内まりや/,
+  /竹内結子/,
+  /竹内由恵/,
+  /佐々木健介/
 ]
 
 const trueList = [

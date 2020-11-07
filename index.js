@@ -41,7 +41,8 @@ const falseList = [
   /佐々木希/,
   /佐々木健介/,
   /安本彩花/,
-  /華凜/
+  /華凜/,
+  /松本人志/
 ]
 
 const trueList = [

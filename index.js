@@ -115,10 +115,10 @@ function tweet(x) {
   const docRef = db.collection('5ch-thread');
   docRef.doc(x.id).get().then(doc => {
     if(!doc.exists) {
-      docRef.doc(x.id).set({"url": x.url})
       var tweet_text = x.title + '\n' + x.url;
       client.post('statuses/update', {status: tweet_text}, function(error, tweet, response) {
         if (!error) {
+          docRef.doc(x.id).set({"url": x.url})
           console.log(new Date() + ' tweet success: ' + tweet_text)
         } else {
           console.log(error);

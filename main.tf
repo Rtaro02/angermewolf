@@ -14,6 +14,12 @@ terraform {
   }
 }
 
+resource "google_project" "this" {
+  name       = "angermewolf"
+  project_id = "angermewolf"
+  billing_account = "01FED5-3CFFA8-E45C19"
+}
+
 resource "google_pubsub_topic" "this" {
   project = local.project_id
   name    = "angermewolf"
@@ -61,4 +67,5 @@ resource "google_cloudfunctions_function" "this" {
       retry = false
     }
   }
+  service_account_email = "${google_project.this.number}-compute@developer.gserviceaccount.com"
 }

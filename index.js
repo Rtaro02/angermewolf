@@ -163,12 +163,18 @@ function parse(x) {
 }
 
 function run(url, callback) {
+  console.log("send request");
   request(url).on('error', (err) => { reject(err) })
               .pipe(iconv.decodeStream("windows-31j"))
               .collect((err, body) => {
-                if(err) return callback(err);
+                if(err) {
+                  console.error("error occured")
+                  return callback(err);
+                }
+                console.log("request succeeded")
                 var list = parse(body);
                 for(l of list){
+                  console.log("will tweet")
                   tweet(l);
                 }
                 return callback();
@@ -176,5 +182,6 @@ function run(url, callback) {
 }
 
 exports.execute = (event, context) => {
+  console.log("execution started");
   run(url, function(){})
 }

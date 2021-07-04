@@ -45,7 +45,7 @@ resource "google_storage_bucket" "this" {
 }
 
 resource "google_storage_bucket_object" "this" {
-  name   = "angermewolf"
+  name   = "angermewolf_${timestamp()}"
   source = "./angermewolf.zip"
   bucket = google_storage_bucket.this.name
 }

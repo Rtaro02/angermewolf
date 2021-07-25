@@ -119,18 +119,23 @@ function tweet(x) {
   const docRef = db.collection('5ch-thread');
   docRef.doc(x.id).get().then(doc => {
     if(!doc.exists) {
+      // ハマるので先に保存を実施する
+      docRef.doc(x.id).set({"url": x.url})
       var tweet_text = x.title + '\n' + x.url;
       client.post('statuses/update', {status: tweet_text}, function(error, tweet, response) {
         if (!error) {
-          docRef.doc(x.id).set({"url": x.url})
           console.log(new Date() + ' tweet success: ' + tweet_text)
         } else {
           console.log(error);
+          // ダメな時は削除
+          docRef.doc(x.id).delete();
         }
       });
     } else {
       console.log('Already tweeted');
     }
+  }).catch((error) => {
+    console.log("Error getting document:", error);
   })
 }
 
@@ -187,3 +192,5 @@ exports.execute = (event, context) => {
   console.log("execution started");
   run(url, function(){})
 }
+
+module.exports.execute()

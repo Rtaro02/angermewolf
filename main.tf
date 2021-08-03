@@ -27,7 +27,7 @@ resource "google_pubsub_topic" "this" {
 
 resource "google_cloud_scheduler_job" "this" {
   name      = "angermewolf"
-  schedule  = "*/5 * * * *"
+  schedule  = "*/10 * * * *"
   time_zone = "Asia/Tokyo"
   region    = "asia-northeast1"
 

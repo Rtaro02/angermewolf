@@ -119,16 +119,13 @@ function tweet(x) {
   const docRef = db.collection('5ch-thread');
   docRef.doc(x.id).get().then(doc => {
     if(!doc.exists) {
-      // ハマるので先に保存を実施する
-      docRef.doc(x.id).set({"url": x.url})
       var tweet_text = x.title + '\n' + x.url;
       client.post('statuses/update', {status: tweet_text}, function(error, tweet, response) {
         if (!error) {
+          docRef.doc(x.id).set({"url": x.url})
           console.log(new Date() + ' tweet success: ' + tweet_text)
         } else {
           console.log(error);
-          // ダメな時は削除
-          docRef.doc(x.id).delete();
         }
       });
     } else {
@@ -181,7 +178,7 @@ function run(url, callback) {
                 console.log("request succeeded")
                 var list = parse(body);
                 for(l of list){
-                  console.log("will tweet")
+                  console.log(`${l.title} will tweet`)
                   tweet(l);
                 }
                 return callback();

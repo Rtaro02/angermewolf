@@ -117,8 +117,10 @@ const client = new Twitter({
 
 function tweet(x) {
   const docRef = db.collection('5ch-thread');
+  console.log(`${l.title} check existence`)
   docRef.doc(x.id).get().then(doc => {
     if(!doc.exists) {
+      console.log(`${l.title} is will tweet`)
       var tweet_text = x.title + '\n' + x.url;
       client.post('statuses/update', {status: tweet_text}, function(error, tweet, response) {
         if (!error) {
@@ -178,7 +180,6 @@ function run(url, callback) {
                 console.log("request succeeded")
                 var list = parse(body);
                 for(l of list){
-                  console.log(`${l.title} will tweet`)
                   tweet(l);
                 }
                 return callback();

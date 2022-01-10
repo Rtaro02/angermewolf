@@ -132,7 +132,7 @@ function tweet(x) {
             "url": x.url,
             "timestamp": new Date()
           })
-          console.log(new Date() + ' tweet success: ' + tweet_text)
+          console.log(new Date() + ' tweet success: ' + tweet_text);
         } else {
           console.log(error);
         }

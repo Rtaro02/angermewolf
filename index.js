@@ -117,21 +117,24 @@ const client = new Twitter({
 
 function tweet(x) {
   const docRef = db.collection('5ch-thread');
-  console.log(`${l.title} check existence`)
+  console.log(`${x.title} check existence`);
   docRef.doc(x.id).get().then(doc => {
     if(!doc.exists) {
-      console.log(`${l.title} is will tweet`)
+      console.log(`${x.title} is will tweet`)
       var tweet_text = x.title + '\n' + x.url;
       client.post('statuses/update', {status: tweet_text}, function(error, tweet, response) {
         if (!error) {
-          docRef.doc(x.id).set({"url": x.url})
+          docRef.doc(x.id).set({
+            "url": x.url,
+            "timestamp": new Date()
+          })
           console.log(new Date() + ' tweet success: ' + tweet_text)
         } else {
           console.log(error);
         }
       });
     } else {
-      console.log('Already tweeted');
+      console.log(`${x.title} was already tweeted`);
     }
   }).catch((error) => {
     console.log("Error getting document:", error);

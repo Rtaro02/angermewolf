@@ -16,7 +16,8 @@ const db = new Firestore({
 });
 
 // ダウンロード先のURL
-const url = 'https://matsuri.5ch.net/morningcoffee/subback.html';
+const HOST = 'https://kizuna.5ch.net';
+const WOLF_PATH = 'morningcoffee';
 
 const falseList = [
   /鈴木/,
@@ -123,10 +124,10 @@ function tweet(x) {
   const docRef = db.collection('5ch-thread');
   console.log(`${x.title} check existence`);
   docRef.doc(x.id).get().then(doc => {
-    if(!doc.exists) {
+    if (!doc.exists) {
       console.log(`${x.title} is will tweet`)
       var tweet_text = x.title + '\n' + x.url;
-      client.post('statuses/update', {status: tweet_text}, function(error, tweet, response) {
+      client.post('statuses/update', { status: tweet_text }, function (error, tweet, response) {
         if (!error) {
           docRef.doc(x.id).set({
             "url": x.url,
@@ -145,13 +146,13 @@ function tweet(x) {
   })
 }
 
-function checkAngerme (x) {
+function checkAngerme(x) {
   // Exception Area
-  for(var fl of falseList) {
-    if(fl.test(x)) return false;
+  for (var fl of falseList) {
+    if (fl.test(x)) return false;
   }
-  for(var tl of trueList) {
-    if(tl.test(x)) return true;
+  for (var tl of trueList) {
+    if (tl.test(x)) return true;
   }
   // If x includes momona, this sentence have momona topic even if other members name is there.
   return false;
@@ -160,14 +161,14 @@ function checkAngerme (x) {
 function parse(x) {
   var l = [];
   var list = x.replace(/\n/g, '').split('<a');
-  for(var item of list){
+  for (var item of list) {
     // Skip non thread title.
-    if(/^.*href="\d+.*$/.test(item)) {
+    if (/^.*href="\d+.*$/.test(item)) {
       var unit = {};
       unit.id = item.replace(/^.*href="([^\/]+)\/.*$/, '$1');
-      unit.url = 'https://matsuri.5ch.net/test/read.cgi/morningcoffee/' + unit.id;
+      unit.url = `${HOST}/test/read.cgi/${WOLF_PATH}/${unit.id}`;
       unit.title = item.replace(/^.*>([^>]+)<\/a>.*$/, '$1').replace(/&quot;/g, '').replace(/^\d+: /, '').replace(/\(\d+\)$/, '');
-      if(checkAngerme(unit.title)) {
+      if (checkAngerme(unit.title)) {
         l.push(unit);
       }
     }
@@ -178,24 +179,25 @@ function parse(x) {
 function run(url, callback) {
   console.log("send request");
   request(url).on('error', (err) => { reject(err) })
-              .pipe(iconv.decodeStream("windows-31j"))
-              .collect((err, body) => {
-                if(err) {
-                  console.error("error occured")
-                  return callback(err);
-                }
-                console.log("request succeeded")
-                var list = parse(body);
-                for(l of list){
-                  tweet(l);
-                }
-                return callback();
-              });
+    .pipe(iconv.decodeStream("windows-31j"))
+    .collect((err, body) => {
+      if (err) {
+        console.error("error occured")
+        return callback(err);
+      }
+      console.log("request succeeded")
+      console.log(`responseBody: ${body}`)
+      var list = parse(body);
+      for (l of list) {
+        tweet(l);
+      }
+      return callback();
+    });
 }
 
 exports.execute = (event, context) => {
   console.log("execution started");
-  run(url, function(){})
+  run(`${HOST}/${WOLF_PATH}/subback.html`, function () { })
 }
 
 module.exports.execute()

@@ -11,8 +11,8 @@ const Firestore = require('@google-cloud/firestore');
 const { rejects } = require('assert');
 
 const db = new Firestore({
-  projectId: credential.projectId,
-  keyFilename: credential.keyFilename,
+  projectId: credential.firestore.projectId,
+  keyFilename: credential.firestore.keyFilename,
 });
 
 // ダウンロード先のURL
@@ -188,9 +188,7 @@ function run(url, callback) {
       console.log("request succeeded")
       console.log(`responseBody: ${body}`)
       var list = parse(body);
-      for (l of list) {
-        tweet(l);
-      }
+      list.forEach(l => { tweet(l) })
       return callback();
     });
 }

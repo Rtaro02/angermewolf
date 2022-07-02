@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: angermewolf
+  namespace: angermewolf
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: angermewolf
+        spec:
+          volumes:
+          - name: google-cloud-key
+            secret:
+              secretName: pubsub-key
+          containers:
+          - name: angermewolf
+            image: us-west1-docker.pkg.dev/takedarut-registry/takedarut-registry/angermewolf:latest
+            volumeMounts:
+            - name: google-cloud-key
+              mountPath: /var/secrets/google
+            env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/google/key.json
+          restartPolicy: OnFailure
+          
